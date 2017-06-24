@@ -16,6 +16,7 @@ processLine <- function(rawLine) {
 }
 
 processDataset <- function(inputDirectory, featureList) {
+  print(paste0("Loading the ", inputDirectory, " dataset and cleaning spaces"))
   # read in the raw lines from X_*.txt
   X_file <- file(paste0(inputDirectory, "/X_", inputDirectory, ".txt"), "r")
   lines <- readLines(X_file)
@@ -29,6 +30,7 @@ processDataset <- function(inputDirectory, featureList) {
   close(outFile)
   
   # Read intermediate file back into a data frame
+  print(paste0("Loading the cleaned ", inputDirectory, " dataset"))
   # (Found this method to be faster than building the data frame row by row)
   outputDF <- read.csv(cleanedFileName, header=FALSE, sep=" ", col.names = featureList)
   
@@ -42,11 +44,11 @@ processDataset <- function(inputDirectory, featureList) {
                         header=FALSE, col.names=c("activityIndex"))
   # read activity_labels.txt
   activityLabelsDF <- read.csv("activity_labels.txt", header=FALSE, sep=" ", 
-                               col.names=c("activityIndex", "activityLabel"))
+                               col.names=c("activityIndex", "activity"))
   # join on actitivity index to get the y activity labels
   yActivityLabels <- merge(yDF, activityLabelsDF, sort=FALSE)
   # add column with activity labels to data frame
-  outputDF <- cbind(outputDF, activityLabel=yActivityLabels$activityLabel)
+  outputDF <- cbind(outputDF, activity=yActivityLabels$activity)
   
   # keep only rows with complete cases (only 1 such row was found to have issues in train)
   outputDF[complete.cases(outputDF),]
@@ -82,14 +84,16 @@ main <- function() {
   
   trainDF <- processDataset("train", featureList)
   testDF <- processDataset("test", featureList)
+  print("Merging the train and test datasets ..")
   allData <- rbind(trainDF, testDF)
   
   ######## Select relevant columns ##############
 
+  print("Extracting relevant columns and renaming ..")
   meanColumns <- extractColumns("mean(Freq)?", featureList)
   stdColumns <- extractColumns("std", featureList)
   finalDataSubset <- select(allData, 
-                            c(meanColumns, stdColumns, "subject", "activityLabel"))
+                            c(meanColumns, stdColumns, "subject", "activity"))
 
   ########### Rename columns ####################
 
@@ -97,7 +101,8 @@ main <- function() {
 
   ###### Group by (subject, activity) and summarize #####
 
-  summarizedData <- finalDataSubset %>% group_by(subject, activityLabel) %>% summarise_all(mean)
+  print("Summarizing data by (suject,activity) groups and writing to final file")
+  summarizedData <- finalDataSubset %>% group_by(subject, activity) %>% summarise_all(mean)
   write.csv(summarizedData, "HumanActivityRecognition.csv", row.names=FALSE)
 
 }
