@@ -1,14 +1,6 @@
 
 library(stringr)
 library(dplyr)
-#processLine <- function(rowIndex, lineVector, tokenMatrix, validLength) {
-#  tokens <- str_split(str_trim(gsub(" +", " ", lineVector[rowIndex])), " ")
-  #print(length(tokens[[1]]))
-#  if (length(tokens[[1]]) == validLength) {
-#    tokenMatrix[rowIndex,] <- as.character(tokens[[1]])
-#    print(rowIndex)
-#  }
-#}
 
 # This function removes extra spaces between tokens and at beginning and end of the line
 processLine <- function(rawLine) {
